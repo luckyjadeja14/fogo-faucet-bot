@@ -23,8 +23,7 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 (async () => {
     try {
         console.log('Started refreshing application (/) commands.');
-        // The first argument is your bot's Client ID, not the token
-        // You can find it on the "General Information" page of your Discord App
+        
         await rest.put(
             Routes.applicationCommands('1365974532489347102'), 
             { body: commands },
