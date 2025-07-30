@@ -6,7 +6,7 @@ require('dotenv').config();
 
 // --- CONFIGURATION ---
 const FAUCET_AMOUNT = 1; // Amount of FOGO to send
-const FOGO_EXPLORER_URL = "https://explorer.fogo.io/tx/"; // CHANGE THIS to the real Fogo explorer URL if different
+const FOGO_EXPLORER_URL = "https://explorer.fogo.io/tx/"; 
 
 const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
