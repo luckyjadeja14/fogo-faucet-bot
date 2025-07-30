@@ -1,21 +1,24 @@
 // index.js
-const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js'); // NOTE: EmbedBuilder is added here
+const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const { Connection, Keypair, SystemProgram, PublicKey, LAMPORTS_PER_SOL, sendAndConfirmTransaction, Transaction } = require('@solana/web3.js');
+const { getOrCreateAssociatedTokenAccount, createTransferInstruction } = require('@solana/spl-token');
 const { canUserClaim, updateUserClaim, COOLDOWN_HOURS } = require('./db.js');
 require('dotenv').config();
 
 // --- CONFIGURATION ---
-const FAUCET_AMOUNT = 1; // Amount of FOGO to send
-const FOGO_EXPLORER_URL = "https://explorer.fogo.io/tx/"; // CHANGE THIS to the real Fogo explorer URL if different
+const FAUCET_FOGO_AMOUNT = 1;
+const FAUCET_FUSD_AMOUNT = 10;
+const FUSD_DECIMALS = 6;
+const FOGO_EXPLORER_URL = "https://explorer.fogo.io/tx/";
+
+const FUSD_MINT_PUBKEY = new PublicKey(process.env.FUSD_MINT_ADDRESS);
 
 const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
 });
 
-// Establish connection to the Fogo Testnet
 const connection = new Connection(process.env.FOGO_RPC_URL, 'confirmed');
 
-// Load the bot's wallet
 let faucetWallet;
 try {
     const secretKey = Uint8Array.from(JSON.parse(process.env.BOT_PRIVATE_KEY));
@@ -38,22 +41,23 @@ client.on('interactionCreate', async interaction => {
     //  SLASH COMMAND: /faucet
     // =================================================================
     if (interaction.commandName === 'faucet') {
+        // NEW LOGGING
+        console.log(`Received /faucet command from ${interaction.user.tag}`);
+
         const discordId = interaction.user.id;
         const userWalletAddress = interaction.options.getString('address');
+        const tokenChoice = interaction.options.getString('token');
 
-        // 1. Defer Reply to avoid timeout
         await interaction.deferReply({ ephemeral: true });
 
-        // 2. Validate Solana address
         let userPublicKey;
         try {
             userPublicKey = new PublicKey(userWalletAddress);
         } catch (error) {
-            await interaction.editReply('❌ That does not look like a valid Fogo wallet address. Please check and try again.');
+            await interaction.editReply('❌ That does not look like a valid Fogo wallet address.');
             return;
         }
 
-        // 3. Check Cooldown
         const claimCheck = canUserClaim(discordId);
         if (!claimCheck.canClaim) {
             const timeLeft = Math.ceil((claimCheck.nextClaimTime - Date.now()) / (1000 * 60 * 60));
@@ -61,46 +65,40 @@ client.on('interactionCreate', async interaction => {
             return;
         }
 
-        // 4. Perform the transaction
         try {
-            console.log(`Attempting to send ${FAUCET_AMOUNT} FOGO to ${userWalletAddress}`);
+            const transaction = new Transaction();
+            let amountToSend, tokenName;
 
-            const transaction = new Transaction().add(
-                SystemProgram.transfer({
-                    fromPubkey: faucetWallet.publicKey,
-                    toPubkey: userPublicKey,
-                    lamports: FAUCET_AMOUNT * LAMPORTS_PER_SOL
-                })
-            );
+            if (tokenChoice === 'fogo') {
+                console.log(`Attempting to send ${FAUCET_FOGO_AMOUNT} FOGO to ${userWalletAddress}`);
+                amountToSend = FAUCET_FOGO_AMOUNT;
+                tokenName = 'FOGO';
+                transaction.add(SystemProgram.transfer({ fromPubkey: faucetWallet.publicKey, toPubkey: userPublicKey, lamports: amountToSend * LAMPORTS_PER_SOL }));
+            }
+            else if (tokenChoice === 'fusd') {
+                console.log(`Attempting to send ${FAUCET_FUSD_AMOUNT} FUSD to ${userWalletAddress}`);
+                amountToSend = FAUCET_FUSD_AMOUNT;
+                tokenName = 'FUSD';
+                const fromTokenAccount = await getOrCreateAssociatedTokenAccount(connection, faucetWallet, FUSD_MINT_PUBKEY, faucetWallet.publicKey);
+                const toTokenAccount = await getOrCreateAssociatedTokenAccount(connection, faucetWallet, FUSD_MINT_PUBKEY, userPublicKey);
+                transaction.add(createTransferInstruction(fromTokenAccount.address, toTokenAccount.address, faucetWallet.publicKey, amountToSend * (10 ** FUSD_DECIMALS)));
+            }
 
             const signature = await sendAndConfirmTransaction(connection, transaction, [faucetWallet]);
 
-            // 5. Success: Update database and reply with a professional Embed
             updateUserClaim(discordId);
-
             const successEmbed = new EmbedBuilder()
-                .setColor('#00FF00') // Green
+                .setColor('#00FF00')
                 .setTitle('✅ Faucet Claim Successful')
-                .setDescription(`Successfully sent **${FAUCET_AMOUNT} FOGO** to your wallet.`)
-                .addFields(
-                    { name: 'Recipient', value: `\`${userWalletAddress}\``, inline: true },
-                    { name: 'Amount', value: `${FAUCET_AMOUNT} FOGO`, inline: true },
-                    { name: 'Transaction', value: `[View on Explorer](${FOGO_EXPLORER_URL}${signature})` }
-                )
-                .setTimestamp()
-                .setFooter({ text: 'Fogo Testnet Faucet' });
-            
+                .setDescription(`Successfully sent **${amountToSend} ${tokenName}** to your wallet.`)
+                .addFields({ name: 'Transaction', value: `[View on Explorer](${FOGO_EXPLORER_URL}${signature})` })
+                .setTimestamp();
             await interaction.editReply({ embeds: [successEmbed] });
             console.log(`Success! Tx: ${signature}`);
 
         } catch (error) {
             console.error("Transaction failed:", error);
-            // NEW: Better error handling
-            if (error.message.includes("insufficient lamports")) {
-                await interaction.editReply('⛔️ Oh no! The faucet is currently out of funds. Please ping an admin to get it refilled.');
-            } else {
-                await interaction.editReply('⛔️ An error occurred. The Fogo network might be busy or a different issue occurred. Please try again in a few minutes.');
-            }
+            await interaction.editReply('⛔️ An error occurred. The Fogo network may be busy or down. Please also check that the faucet is funded and the FUSD mint address is correct.');
         }
     }
 
@@ -108,22 +106,25 @@ client.on('interactionCreate', async interaction => {
     //  SLASH COMMAND: /balance
     // =================================================================
     if (interaction.commandName === 'balance') {
+        // NEW LOGGING
+        console.log(`Received /balance command from ${interaction.user.tag}`);
+
         await interaction.deferReply();
         try {
             const balanceLamports = await connection.getBalance(faucetWallet.publicKey);
             const balanceFogo = balanceLamports / LAMPORTS_PER_SOL;
 
             const balanceEmbed = new EmbedBuilder()
-                .setColor('#0099ff') // Blue
+                .setColor('#0099ff')
                 .setTitle('💧 Faucet Balance')
                 .setDescription(`The faucet wallet currently holds **${balanceFogo.toFixed(4)} FOGO**.`)
                 .setTimestamp();
-            
             await interaction.editReply({ embeds: [balanceEmbed] });
+            console.log("Successfully replied with balance.");
 
         } catch (error) {
             console.error("Failed to get balance:", error);
-            await interaction.editReply('⛔️ Could not retrieve the faucet balance at this time.');
+            await interaction.editReply('⛔️ Could not retrieve the faucet balance. The Fogo RPC node may be down.');
         }
     }
 });
