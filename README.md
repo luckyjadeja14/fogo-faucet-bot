@@ -6,7 +6,7 @@ Follow these steps to deploy your own instance of the **Fogo Faucet Discord Bot*
 
 ### 1. Clone the Repository
 
-Open your terminal or Replit Shell and run:
+Open your terminal or Shell and run:
 
 ```bash
 git clone https://github.com/luckyjadeja14/fogo-faucet-bot.git

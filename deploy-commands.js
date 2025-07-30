@@ -11,7 +11,7 @@ const commands = [
             option.setName('address')
                 .setDescription('Your Fogo (Solana) wallet address')
                 .setRequired(true)
-        ) // Corrected placement
+        )
         .addStringOption(option =>
             option.setName('token')
                 .setDescription('The type of token you want to receive.')
@@ -19,6 +19,8 @@ const commands = [
                 .addChoices(
                     { name: 'FOGO (Native Gas Token)', value: 'fogo' },
                     { name: 'FUSD (Stablecoin)', value: 'fusd' },
+                    // This is the new token you wanted to add
+                    { name: 'FOGO (Utility Token)', value: 'fogot' } 
                 )
         ),
         
@@ -33,9 +35,9 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 (async () => {
     try {
         console.log('Started refreshing application (/) commands.');
-        // The first argument is your bot's Client ID, not the token
+        // Remember to put your real Client ID here!
         await rest.put(
-            Routes.applicationCommands('1365974532489347102'), // Remember to put your real Client ID here
+            Routes.applicationCommands('1365974532489347102'), 
             { body: commands },
         );
         console.log('Successfully reloaded application (/) commands.');
