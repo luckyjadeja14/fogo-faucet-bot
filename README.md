@@ -34,6 +34,8 @@ Ensure the following:
 
 ```bash
 git clone https://github.com/luckyjade14/fogo-faucet-bot.git
+```
+```
 cd fogo-faucet-bot
 ```
 
