@@ -103,4 +103,4 @@ node index.js
 
 ## 🙌 Contributing & License
 
-PRs are welcome. Open issues for suggestions or bugs.
+PRs are welcome.Open issues for suggestions or bugs.
