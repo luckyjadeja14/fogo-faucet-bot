@@ -10,8 +10,8 @@ const FAUCET_FOGO_AMOUNT = 1;     // Amount of native FOGO to send
 const FAUCET_FUSD_AMOUNT = 10;    // Amount of FUSD to send
 const FAUCET_FOGOT_AMOUNT = 1;  // NEW: Amount of "Fogo Token" to send
 
-const FUSD_DECIMALS = 6;          // IMPORTANT: Verify the number of decimals FUSD has
-const FOGOT_DECIMALS = 9;         // NEW & IMPORTANT: Verify the number of decimals the new token has
+const FUSD_DECIMALS = 6;          // 
+const FOGOT_DECIMALS = 9;         // 
 
 const FOGO_EXPLORER_URL = "https://explorer.fogo.io/tx/";
 
