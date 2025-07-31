@@ -56,7 +56,7 @@ client.on('interactionCreate', async interaction => {
         try { userPublicKey = new PublicKey(userWalletAddress); }
         catch (error) { await interaction.editReply('❌ That does not look like a valid Fogo wallet address.'); return; }
 
-        const claimCheck = canUserClaim(discordId);
+        const claimCheck = canUserClaim(discordId, tokenChoice);
         if (!claimCheck.canClaim) {
             const timeLeft = Math.ceil((claimCheck.nextClaimTime - Date.now()) / (1000 * 60 * 60));
             await interaction.editReply(`❌ You have already claimed tokens recently. Please wait approximately ${timeLeft} more hour(s).`);
@@ -96,7 +96,7 @@ client.on('interactionCreate', async interaction => {
             
             const signature = await sendAndConfirmTransaction(connection, transaction, [faucetWallet]);
 
-            updateUserClaim(discordId);
+            updateUserClaim(discordId, tokenChoice);
             const successEmbed = new EmbedBuilder()
                 .setColor('#00FF00')
                 .setTitle('✅ Faucet Claim Successful')
