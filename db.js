@@ -17,7 +17,7 @@ function canUserClaim(discordId) {
     const row = db.prepare('SELECT last_claim FROM claims WHERE discord_id = ?').get(discordId);
 
     if (!row) {
-        // User has never claimed before
+        
         return { canClaim: true };
     }
 

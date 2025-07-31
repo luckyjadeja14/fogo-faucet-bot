@@ -17,7 +17,7 @@ const FOGO_EXPLORER_URL = "https://explorer.fogo.io/tx/";
 
 // --- MINT ADDRESSES ---
 const FUSD_MINT_PUBKEY = new PublicKey(process.env.FUSD_MINT_ADDRESS);
-const FOGOT_MINT_PUBKEY = new PublicKey(process.env.FOGOT_MINT_ADDRESS); // NEW
+const FOGOT_MINT_PUBKEY = new PublicKey(process.env.FOGOT_MINT_ADDRESS); 
 
 const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
@@ -67,14 +67,14 @@ client.on('interactionCreate', async interaction => {
             const transaction = new Transaction();
             let amountToSend, tokenName;
 
-            // NATIVE FOGO LOGIC
+            
             if (tokenChoice === 'fogo') {
                 amountToSend = FAUCET_FOGO_AMOUNT;
                 tokenName = 'FOGO (Native)';
                 console.log(`Attempting to send ${amountToSend} ${tokenName} to ${userWalletAddress}`);
                 transaction.add(SystemProgram.transfer({ fromPubkey: faucetWallet.publicKey, toPubkey: userPublicKey, lamports: amountToSend * LAMPORTS_PER_SOL }));
             }
-            // FUSD LOGIC
+            // FUSD 
             else if (tokenChoice === 'fusd') {
                 amountToSend = FAUCET_FUSD_AMOUNT;
                 tokenName = 'FUSD';
@@ -83,7 +83,7 @@ client.on('interactionCreate', async interaction => {
                 const toTokenAccount = await getOrCreateAssociatedTokenAccount(connection, faucetWallet, FUSD_MINT_PUBKEY, userPublicKey);
                 transaction.add(createTransferInstruction(fromTokenAccount.address, toTokenAccount.address, faucetWallet.publicKey, amountToSend * (10 ** FUSD_DECIMALS)));
             }
-            // NEW LOGIC FOR THE THIRD TOKEN ("FOGO TOKEN")
+            // FOGO token 
             else if (tokenChoice === 'fogot') {
                 amountToSend = FAUCET_FOGOT_AMOUNT;
                 tokenName = 'FOGO (Utility Token)';
@@ -93,7 +93,7 @@ client.on('interactionCreate', async interaction => {
                 transaction.add(createTransferInstruction(fromTokenAccount.address, toTokenAccount.address, faucetWallet.publicKey, amountToSend * (10 ** FOGOT_DECIMALS)));
             }
 
-            // This part works for all token types
+            
             const signature = await sendAndConfirmTransaction(connection, transaction, [faucetWallet]);
 
             updateUserClaim(discordId);

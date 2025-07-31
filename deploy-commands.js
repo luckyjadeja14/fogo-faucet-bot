@@ -19,7 +19,7 @@ const commands = [
                 .addChoices(
                     { name: 'FOGO (Native Gas Token)', value: 'fogo' },
                     { name: 'FUSD (Stablecoin)', value: 'fusd' },
-                    // This is the new token you wanted to add
+                    
                     { name: 'FOGO (Utility Token)', value: 'fogot' } 
                 )
         ),
@@ -35,7 +35,7 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 (async () => {
     try {
         console.log('Started refreshing application (/) commands.');
-        // Remember to put your real Client ID here!
+        // paste your clinent id here
         await rest.put(
             Routes.applicationCommands('1365974532489347102'), 
             { body: commands },
