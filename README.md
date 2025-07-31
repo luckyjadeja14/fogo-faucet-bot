@@ -33,7 +33,7 @@ Ensure the following:
 ### 2. Clone the Repository
 
 ```bash
-git clone https://github.com/luckyjade14/fogo-faucet-bot.git
+git clone https://github.com/luckyjadeja14/fogo-faucet-bot.git
 ```
 ```
 cd fogo-faucet-bot
