@@ -37,7 +37,7 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
         console.log('Started refreshing application (/) commands.');
         // paste your client id here
         await rest.put(
-            Routes.applicationCommands("YOUR_BOT_CLIENT_ID_HERE"), 
+            Routes.applicationCommands(process.env.CLIENT_ID),
             { body: commands },
         );
         console.log('Successfully reloaded application (/) commands.');

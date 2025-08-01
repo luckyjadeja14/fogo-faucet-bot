@@ -56,6 +56,7 @@ Create a `.env` file in the root directory and add:
 ```env
 DISCORD_TOKEN=your-discord-bot-token
 BOT_PRIVATE_KEY=[your-faucet-private-key-in-json-array]
+CLIENT_ID=your_bot_client_id_here
 FOGO_RPC_URL=https://fogo-testnet.rpc.url
 FUSD_MINT_ADDRESS=fusd-mint-address
 FOGOT_MINT_ADDRESS=fogot-mint-address
@@ -73,11 +74,6 @@ FOGOT_MINT_ADDRESS=fogot-mint-address
 Edit `deploy-commands.js` and replace:
 
 ```js
-Routes.applicationCommands('YOUR_BOT_CLIENT_ID_HERE')
-```
-
-With your bot's actual **Client ID**, then run:
-
 ```bash
 node deploy-commands.js
 ```
